@@ -24,6 +24,12 @@ describe CodeSequence do
           sequence.scan(%w[D A]).should == [2, 4]
         end
       end
+
+      context "sequences longer than code" do
+        it "should still find indexes" do
+          sequence.scan(%w[A D A B D A D A]).should == [3]
+        end
+      end
     end
   end
 
