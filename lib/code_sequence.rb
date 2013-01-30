@@ -24,11 +24,15 @@ class CodeSequence
 
     if haystack.is_a? Array
       if first == haystack.first
-        sequence[index ... index + haystack.length] == haystack
+        slice(index, haystack.length) == haystack
       end
     else
       first == haystack
     end
+  end
+
+  def slice(index, length)
+    sequence[index ... index + length]
   end
 
 end

@@ -1,7 +1,8 @@
 require 'code_sequence'
 
 class BoosterBox
-  attr_reader :boosters, :code_sequence
+  attr_reader :code_sequence
+  attr_accessor :boosters
 
   def initialize(count = 36)
     @boosters = count.times.map { |n| Booster.new(n + 1) }
@@ -11,7 +12,7 @@ class BoosterBox
     3
   end
 
-  def box_by_row
+  def by_row
     result = []
     boosters.each_slice(boosters_per_row) do |slice|
       result << slice
@@ -20,7 +21,7 @@ class BoosterBox
   end
 
   def row(index)
-    box_by_row[index-1]
+    by_row[index]
   end
 
   def codes
@@ -39,9 +40,41 @@ class BoosterBox
     )
   end
 
-  def match!
-    code_sequence.scan(codes)
+  def match!(box_codes = codes)
+    code_sequence.scan(box_codes)
   end
+
+  def mappings
+    return unless matches = match!
+
+    matches.map do |match|
+      code_sequence.slice(match, boosters.length).map(&:key)
+    end
+  end
+
+  def shift(index, insert_at)
+    clone.tap do |copy|
+      clone_by_row = copy.by_row
+      original_row = clone_by_row.delete_at(index)
+      clone_by_row.insert(insert_at, original_row)
+      copy.boosters = clone_by_row.flatten
+    end
+  end
+
+  def shift_all(&block)
+    rows = by_row.length
+
+    shifts = ( 0 ... rows ).to_a.  # find possible rows indexes ..
+      permutation(2).to_a.         # extract all permutations of two elems ..
+      reject do |index, insert_at| # remove couples (x+1, x) since the
+        index == insert_at + 1     # same permutation is given by (x, x+1)
+      end
+
+    shifts.each do |index, insert_at|
+      yield shift(index, insert_at)
+    end
+  end
+
 end
 
 class Booster
