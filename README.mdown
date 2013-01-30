@@ -1,0 +1,3 @@
+# Box Oracle
+
+Box Oracle is a tool for mapping MTG boxes.
