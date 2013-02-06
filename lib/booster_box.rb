@@ -40,15 +40,16 @@ class BoosterBox
     )
   end
 
-  def match!(box_codes = codes)
+  def matches?(box_codes = codes)
     code_sequence.scan(box_codes)
   end
 
   def mappings
-    return unless matches = match!
+    matches = self.matches?
+    return unless matches
 
     matches.map do |match|
-      code_sequence.slice(match, boosters.length).map(&:key)
+      code_sequence.slice(match, boosters.length)
     end
   end
 
@@ -73,6 +74,20 @@ class BoosterBox
     shifts.each do |index, insert_at|
       yield shift(index, insert_at)
     end
+  end
+
+  def solutions
+    result = []
+
+    if matches?
+      result << mappings
+    end
+
+    shift_all do |shifted|
+      result << shifted.mappings if shifted.matches?
+    end
+
+    result.flatten(1) unless result.empty?
   end
 
 end
