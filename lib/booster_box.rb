@@ -1,4 +1,5 @@
 require 'code_sequence'
+require 'active_support/all'
 
 class BoosterBox
   attr_reader :code_sequence
@@ -15,7 +16,7 @@ class BoosterBox
   def by_row
     result = []
     boosters.each_slice(boosters_per_row) do |slice|
-      result << slice
+      result << BoxRow.new(slice)
     end
     result
   end
@@ -49,7 +50,8 @@ class BoosterBox
     return unless matches
 
     matches.map do |match|
-      code_sequence.slice(match, boosters.length)
+      codes = code_sequence.slice(match, boosters.length)
+      BoxMapping.new(codes, boosters)
     end
   end
 
@@ -87,7 +89,9 @@ class BoosterBox
       result << shifted.mappings if shifted.matches?
     end
 
-    result.flatten(1) unless result.empty?
+    unless result.empty?
+      result.flatten(1).uniq_by(&:ids)
+    end
   end
 
 end
@@ -114,5 +118,28 @@ class BoosterCode
 
   def ==(other_code)
     key == :empty || other_code.key == :empty || key == other_code.key
+  end
+end
+
+class BoxRow < Array
+  def ids
+    self.map(&:id)
+  end
+end
+
+class BoxMapping
+  attr_reader :codes, :boosters
+
+  def initialize(codes, boosters)
+    @codes = codes
+    @boosters = boosters
+  end
+
+  def keys
+    codes.map(&:key)
+  end
+
+  def ids
+    boosters.map(&:id)
   end
 end

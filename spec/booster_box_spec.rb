@@ -10,8 +10,8 @@ describe BoosterBox do
 
   context ".row" do
     it "returns the booster row" do
-      box.row(0).map(&:id).should  == [ 1, 2, 3 ]
-      box.row(2).map(&:id).should  == [ 7, 8, 9 ]
+      box.row(0).ids.should  == [ 1, 2, 3 ]
+      box.row(2).ids.should  == [ 7, 8, 9 ]
     end
   end
 
@@ -39,11 +39,20 @@ describe BoosterBox do
       end
 
       context ".mappings" do
-        it "should list the possible mappings" do
-          mappings = box.mappings
+        let(:mappings) { box.mappings }
 
-          mappings.first.map(&:key).should == %w( D A D A C A B D A )
-          mappings.last.map(&:key).should == %w( D A C A B D A D A )
+        it "should return box mappings" do
+          mappings.should have(2).items
+          mappings.first.should be_a BoxMapping
+        end
+
+        it "should list the possible mappings" do
+          mappings[0].codes.map(&:key).should == %w( D A D A C A B D A )
+          mappings[1].codes.map(&:key).should == %w( D A C A B D A D A )
+        end
+
+        it "should return the associated boosters" do
+          mappings.first.boosters.map(&:id).should == (1..9).to_a
         end
       end
     end
@@ -52,9 +61,9 @@ describe BoosterBox do
   context ".shift!" do
     it "removes a row and inserts it in another location" do
       shifted = box.shift(0, 1)
-      shifted.row(0).map(&:id).should == [ 4, 5, 6 ]
-      shifted.row(1).map(&:id).should == [ 1, 2, 3 ]
-      shifted.row(2).map(&:id).should == [ 7, 8, 9 ]
+      shifted.row(0).ids.should == [ 4, 5, 6 ]
+      shifted.row(1).ids.should == [ 1, 2, 3 ]
+      shifted.row(2).ids.should == [ 7, 8, 9 ]
     end
   end
 
@@ -76,18 +85,23 @@ describe BoosterBox do
   end
 
   context ".solutions" do
+
+    let(:sequence) do %w( A B D A C ) end
+    let(:box_codes) do %w( A C A A B D B D A ) end
+    let(:solutions) { box.solutions }
+
     before do
       box.codes = box_codes
       box.code_sequence = sequence
     end
 
-    context "full mapped box" do
-      let(:sequence) do %w( A B D A C ) end
-      let(:box_codes) do %w( A C A A B D B D A ) end
+    it "should return box mappings" do
+      solutions.first.should be_a BoxMapping
+    end
 
-      it "finds possible solutions including shifts" do
-        box.solutions.first.map(&:key).should == %w( A B D A C A B D A )
-      end
+    it "finds possible solutions including shifts" do
+      solutions.first.keys.should == %w( A B D A C A B D A )
+      solutions.first.ids.should == [ 4, 5, 6, 1, 2, 3, 7, 8, 9 ]
     end
 
     context "partial mapped box" do
@@ -95,10 +109,8 @@ describe BoosterBox do
       let(:box_codes) do ["A", nil, nil, "D", "A", "D", nil, nil, nil] end
 
       it "finds possible solutions including shifts" do
-        solutions = box.solutions
-
-        solutions.first.map(&:key).should == %w( D A D A B D A D A )
-        solutions.last.map(&:key).should == %w( D A D A B D A D A )
+        solutions.first.keys.should == %w( D A D A B D A D A )
+        solutions.first.ids.should == [ 4, 5, 6, 1, 2, 3, 7, 8, 9 ]
       end
     end
 
@@ -106,8 +118,8 @@ describe BoosterBox do
       let(:sequence) do %w( A B D A C ) end
       let(:box_codes) do ["A", nil, nil, "C", "A", "A", nil, nil, nil] end
 
-      it "finds possible solutions including shifts" do
-        box.solutions.should be_nil
+      it "finds no solutions" do
+        solutions.should be_nil
       end
 
     end
